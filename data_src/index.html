@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ROVER</title>
+    <link rel="stylesheet" type="text/css" href="main.css"> 
+    <link rel="stylesheet" href="bulma.min.css">
+    <link rel="stylesheet" href="rangeslider.css">
+    <script src="jquery-3.5.1.min.js"></script>
+    <script src="nipplejs.js"></script>
+    <script src="rangeslider.min.js"></script>
+    <script src="main.js"></script>
+
+    <!-- https://feathericons.com/ -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=0.5, maximum-scale=0.5">
+    <style>
+    html, body {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 0;
+        margin: 0;
+    }
+
+    #NippleLeft {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 50%;
+        -background: rgba(0, 255, 0, 0.1);
+    }
+
+    #NippleRight {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        width: 50%;
+        -background: rgba(0, 0, 255, 0.1);
+    }
+
+    #CommandBoardUp {
+      position: absolute;
+      top: 5%;
+      width: fit-content;
+      left: 0;
+      right: 0;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #RoverModel {
+        width: 300px;
+        position: absolute;
+        top: 20%;
+        left: 50%;
+        margin-left: -150px;
+    }
+
+    .RoverWheel{
+        position: absolute;
+        width: 25%;
+    }
+
+    .RoverWheelSpeed{
+        position: absolute;
+        top:50%;
+        left:50%;
+        width: 32px;
+        height: 32px;
+    }
+
+    .RoverDebugData{
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        background-color: white;
+        opacity: 80%;
+        font-size: smaller;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .WifiStatusIconOk{
+      background-color: green !important; 
+    }
+
+    .slider-div{
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      text-align: center;
+      text-align: -webkit-center;
+    }
+
+    #CameraView{
+      margin: 10px;
+      /* width: 115px; */
+      /* height: 115px; */
+      line-height: 115px;
+      text-align: center;
+      /* border: 1px solid red; */
+      height: 100%;
+    }
+
+    #CameraStream{
+      max-width: 100%;
+      max-height: 100%;
+      vertical-align: middle;
+      height: inherit;
+    }
+
+    .rotate90 {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+
+    .nipple{
+      z-index: unset !important;
+    }
+
+    </style>
+</head>
+
+<body>
+    <div id="CameraView">
+      <img id="CameraStream" src="" class="rotate90">
+    </div>
+
+    <div id="NippleLeft"></div>
+    <div id="NippleRight"></div>
+
+
+    <div class="RoverDebugData">
+        <pre id="RoverDebugDataText">
+
+        </pre>
+    </div>
+
+    <div id="">
+        <div id="RoverModel" >
+            <img id="RoverWheelTopLeft" src="Wheel.png" class="RoverWheel" style="left: 5%;top: -2%;">
+            <img id="RoverWheelTopRight" src="Wheel.png" class="RoverWheel" style="left: 70%;top: -2%;transform: scaleX(-1);">
+            <img id="RoverWheelBottomleft" src="Wheel.png" class="RoverWheel" style="left: 5%; top: 80%;">
+            <img id="RoverWheelBottomRight" src="Wheel.png" class="RoverWheel" style="left: 70%;top: 80%;transform: scaleX(-1);">
+            <img id="" src="Rover.png">
+
+            <img id="RoverWheelForwardLeft" src="chevron-up.svg" class="RoverWheelSpeed" style="margin-left: -64px; margin-top: -32px; opacity: 0;">
+            <img id="RoverWheelForwardRight" src="chevron-up.svg" class="RoverWheelSpeed" style="margin-left: +32px; margin-top: -32px; opacity: 0;">
+            <img id="RoverWheelBackwardLeft" src="chevron-down.svg" class="RoverWheelSpeed" style="margin-left: -64px; margin-top: +32px; opacity: 0;">
+            <img id="RoverWheelBackwardRight" src="chevron-down.svg" class="RoverWheelSpeed" style="margin-left: +32px; margin-top: +32px; opacity: 0;">
+
+        </div>
+    </div>
+
+
+    <nav id="CommandBoardUp" class="navbar">
+      <div style="text-align: center;">
+        <div style="">
+          <span>LEFT NIPPLE:</span><span id="debugLeftNipple">DATA</span
+          <p></p>
+          <span>RIGHT NIPPLE:</span><span id="debugRightNipple">DATA</span>
+        </div>
+          <div class="field has-addons buttons are-small">
+            <p>
+              <img id="WifiStatusIcon" src="wifi.svg" style="background-color: red;">
+            </p>
+            <p class="control">
+              <div class="dropdown">
+                <div class="dropdown-trigger">
+                  <button id="otherButton" class="button" aria-haspopup="true" aria-controls="dropdown-menu">
+                    <span>Other</span>
+                  </button>
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                  <div class="dropdown-content">
+                    <a class="dropdown-item play-melody-action" data-melody="0" href="#">Play Jingle Bells</a>
+                    <a class="dropdown-item play-melody-action" data-melody="1" href="#">Play We wish you...</a>
+                    <a class="dropdown-item play-melody-action" data-melody="2" href="#">Play Santa Claus Is Comin...</a>
+                    <a class="dropdown-item play-melody-action" data-melody="3" href="#">Play Wiegenlied (Brahms' Lullaby)...</a>
+                    <a class="dropdown-item play-melody-action" data-melody="S" href="#">Stop playing melody</a>
+                    <hr class="dropdown-divider">
+                    <a id="openCalibrationWindow" href="#" class="dropdown-item">
+                      Calibration settings
+                    </a>
+                    <a id="openWifiWindow" href="#" class="dropdown-item">
+                      WiFi settings
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </p>
+            <p style="width: 16px;"></p>
+            <p class="control">
+              <button id="ModeEasy" class="button is-focused mode-control">
+                <span>Easy</span>
+              </button>
+            </p>
+            <p class="control">
+              <button id="ModeAdvanced" class="button mode-control">
+                <span>Advanced</span>
+              </button>
+            </p>
+            <p style="width: 16px;"></p>
+            <p class="control">
+              <button id="DrivingNormal" class="button mode-driving is-focused">
+                <span>Normal</span>
+              </button>
+            </p>
+            <p class="control">
+              <button id="DrivingRotate" class="button mode-driving">
+                <span>Rotate</span>
+              </button>
+            </p>
+            <p class="control">
+              <button id="DrivingTank" class="button mode-driving">
+                <span>Tank</span>
+              </button>
+            </p>
+            <p style="width: 16px;"></p>
+            <p class="control">
+              <button id="ModePwm" class="button mode-power">
+                <span>PWM</span>
+              </button>
+            </p>
+            <p class="control">
+              <button id="ModeSpeed" class="button is-focused mode-power">
+                <span>Speed</span>
+              </button>
+            </p>
+
+            </div>
+
+      </div>
+    </nav>
+
+<div id="CalibrationWindowModal" class="modal" >
+    <div class="modal-background"></div>
+    <div class="modal-content">
+        <div class="box">
+        <form method="POST">
+            <h1>Settings</h1>
+            <h2 id="CalibrationStatus">STATUS</h2>
+
+            <div class="field-label">
+              <label class="label">Steering servos calibration</label>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Front</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-expanded">
+                  <div class="field has-addons">
+                    <div class="control decr">
+                      <a class="button">-</a>
+                    </div>
+                    <p class="control">
+                      <input class="input" type="number" placeholder="0" name="s0">
+                    </p>
+                    <div class="control incr">
+                      <a class="button">+</a>
+                    </div>
+                  </div>
+                  <p class="help">S0: Front Left</p>
+                </div>
+                <div class="field is-expanded">
+                  <div class="field has-addons">
+                    <div class="control decr">
+                      <a class="button">-</a>
+                    </div>
+                    <p class="control">
+                      <input class="input" type="number" placeholder="0" name="s1">
+                    </p>
+                    <div class="control incr">
+                      <a class="button">+</a>
+                    </div>
+                  </div>
+                  <p class="help">S1: Front Right</p>
+                </div>
+              </div>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Rear</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-expanded">
+                  <div class="field has-addons">
+                    <div class="control decr">
+                      <a class="button">-</a>
+                    </div>
+                    <p class="control">
+                      <input class="input" type="number" placeholder="0" name="s2">
+                    </p>
+                    <div class="control incr">
+                      <a class="button">+</a>
+                    </div>
+                  </div>
+                  <p class="help">S2: Rear Left</p>
+                </div>
+                <div class="field is-expanded">
+                  <div class="field has-addons">
+                    <div class="control decr">
+                      <a class="button">-</a>
+                    </div>
+                    <p class="control">
+                      <input class="input" type="number" placeholder="0" name="s3">
+                    </p>
+                    <div class="control incr">
+                      <a class="button">+</a>
+                    </div>
+                  </div>
+                  <p class="help">S4: Rear Right</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Turret servos calibration</label>
+            </div>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Turret</label>
+              </div>
+              <div class="field-body">
+                <div class="field is-expanded">
+                  <div class="field has-addons">
+                    <div class="control decr">
+                      <a class="button">-</a>
+                    </div>
+                    <p class="control">
+                      <input class="input" type="number" placeholder="0" name="s4">
+                    </p>
+                    <div class="control incr">
+                      <a class="button">+</a>
+                    </div>
+                  </div>
+                  <p class="help">S4: Tilt</p>
+                </div>
+                <div class="field is-expanded">
+                  <div class="field has-addons">
+                    <div class="control decr">
+                      <a class="button">-</a>
+                    </div>
+                    <p class="control">
+                      <input class="input" type="number" placeholder="0" name="s5">
+                    </p>
+                    <div class="control incr">
+                      <a class="button">+</a>
+                    </div>
+                  </div>
+                  <p class="help">S5: Pan</p>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Propulsion PID controller settings</label>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    <input class="input" type="number" placeholder="0" name="kp">
+                  </p>
+                  <p class="help">Kp</p>
+                </div>
+                <div class="field">
+                  <p class="control">
+                    <input class="input" type="number" placeholder="0" name="ki">
+                  </p>
+                  <p class="help">Ki</p>
+                </div>
+                <div class="field">
+                  <p class="control">
+                    <input class="input" type="number" placeholder="0" name="kd">
+                  </p>
+                  <p class="help">Kd</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-grouped">
+              <div class="control">
+                <button class="button is-link" type="button" id="buttonSave">Save</button>
+              </div>
+              <div class="control">
+                <button class="button is-link is-light" type="button" id="buttonTest">Test</button>
+              </div>
+              <div class="control">
+                <button class="button" type="button" id="buttonClose">Close</button>
+              </div>
+            </div>
+        </form>
+    </div>
+    </div>
+    <button class="modal-close is-large" aria-label="close"></button>
+  </div>
+
+
+  <div id="WiFiWindowModal" class="modal" >
+    <div class="modal-background"></div>
+    <div class="modal-content">
+        <div class="box">
+        <form method="POST">
+            <h1>WiFi Settings</h1>
+            <h2 id="WiFiStatus"></h2>
+
+            <div class="field">
+              <label class="label">Connect to an available WiFi network</label>
+            </div>
+
+            <div class="field is-horizontal">
+              <div class="field-label is-normal is-half">
+                <label class="label">Wifi network</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    <input class="input" type="text" name="staName">
+                  </p>
+                  <p class="help">Name</p>
+                </div>
+                <div class="field">
+                  <p class="control">
+                    <input class="input" type="password" name="staPassword">
+                  </p>
+                  <p class="help">Password</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Start an indipendent network if no available network</label>
+            </div>
+
+
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">AP network</label>
+              </div>
+              <div class="field-body">
+                <div class="field">
+                  <p class="control">
+                    <input class="input" type="text" name="apName">
+                  </p>
+                  <p class="help">Name</p>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <p class="control">
+                      <input class="input" type="password" name="apPassword">
+                    </p>
+                    <p class="help">Password</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="field is-grouped">
+              <div class="control">
+                <button class="button is-link" type="button" id="buttonSave">Save</button>
+              </div>
+              <div class="control">
+                <button class="button" type="button" id="buttonClose">Close</button>
+              </div>
+            </div>
+        </form>
+    </div>
+    </div>
+    <button class="modal-close is-large" aria-label="close"></button>
+  </div>
+
+  <div class="slider-div">
+    <p>
+      <button id="ObstacleMode" class="button">
+        <span class="icon">
+          <img  src="ruler-solid.svg">
+        </span>
+      </button>
+    </p>
+    <p>
+      <button id="TurretCameraIcon" class="button">
+        <span class="icon">
+          <img  src="camera.svg">
+        </span>
+      </button>
+    </p>
+    <p>
+      <button id="TurretLaserIcon" class="button">
+        <span class="icon">
+          <img  src="laser.svg">
+        </span>
+      </button>
+    </p>
+    <p>
+      <button id="TurretLedIcon" class="button">
+        <span class="icon">
+          <img src="circle.svg">
+        </span>
+      </button>
+    </p>
+    <p>
+      <img id="LightIcon" src="sun.svg">
+    </p>
+    <p>
+      <input id="bottomLedSlider" type="range" min="0" max="4095" step="5" value="0" data-orientation="vertical" style="height: 100%;">
+    </p>
+  </div>
+
+
+    <script>
+
+      const MODE_CONTROL_EASY = 1;
+      const MODE_CONTROL_ADVANCED = 2;
+      
+      const MODE_DRIVING_NORMAL = 1;
+      const MODE_DRIVING_ROTATE = 2;
+      const MODE_DRIVING_TANK = 3;
+
+      const MODE_POWER_SPEED = 1;
+      const MODE_POWER_PWM = 2;
+
+        var uiCommands={
+            lastControllerTime: null,
+            lastMoveLeft: null,
+            lastMoveRight: null,
+            lastDataSent: null,
+            lastDataSetTimeout: null,
+            jqxhr: null,
+            getEcuJqxhr: null,
+
+            modeControl: MODE_CONTROL_EASY,
+            modeDriving: MODE_DRIVING_NORMAL,
+            modePower: MODE_POWER_SPEED,
+
+            ecuCalcTimer: null,
+
+            lastLeftForceX: null,
+
+            lastAccSendTime: 0,
+            bottomLed: 0,
+            turretLed: 0,
+            turretLaser: 0,
+
+            cameraIp: '192.168.1.16',
+        };
+
+        var RoverEcuParams={
+            motorsSpeed:[0,0,0,0,0,0], // -1 to 1 : -1 backward, 0 stop, 1 forward
+            servoAngle:[0,0,0,0,0,0],  // -90 to 90 deg
+        }
+
+        function renderRover(){
+
+            $('#RoverModel #RoverWheelTopLeft').css('transform','rotate(' + RoverEcuParams.servoAngle[0] + 'deg)');
+            $('#RoverModel #RoverWheelTopRight').css('transform','scaleX(-1) rotate(' + RoverEcuParams.servoAngle[1] + 'deg)');
+            $('#RoverModel #RoverWheelBottomleft').css('transform','rotate(' + RoverEcuParams.servoAngle[2] + 'deg)');
+            $('#RoverModel #RoverWheelBottomRight').css('transform','scaleX(-1) rotate(' + RoverEcuParams.servoAngle[3] + 'deg)');
+
+            $('#RoverModel #RoverWheelForwardLeft').css('opacity', Math.max(0, RoverEcuParams.motorsSpeed[0]) );
+            $('#RoverModel #RoverWheelBackwardLeft').css('opacity', -Math.min(0, RoverEcuParams.motorsSpeed[0]) );
+
+            $('#RoverModel #RoverWheelForwardRight').css('opacity', Math.max(0, RoverEcuParams.motorsSpeed[3]) );
+            $('#RoverModel #RoverWheelBackwardRight').css('opacity', -Math.min(0, RoverEcuParams.motorsSpeed[3]) );
+            
+        }
+
+        function mapi(value, minInput, maxInput, minOutput, maxOutput){
+            return parseInt((Math.min(Math.max(value,minInput),maxOutput)-minInput) / (maxInput - minInput) * (maxOutput - minOutput) + minOutput);
+        }
+
+        function sendData(){
+            clearTimeout(uiCommands.lastDataSetTimeout);
+
+            if (uiCommands.jqxhr || (uiCommands.lastDataSent && Date.now() - uiCommands.lastDataSent < 100) ){
+                //recall this method in 100 ms
+
+                uiCommands.lastDataSetTimeout = setTimeout(function(){sendData()},100);
+                return;
+            }
+
+            uiCommands.lastDataSent = Date.now();
+            //send updated data to the board
+
+            const maxMotorValue = uiCommands.modePower == MODE_POWER_SPEED ? 1500 : 4095;
+
+            uiCommands.jqxhr = $.post( "/ecu",{
+                mode: uiCommands.modePower,
+                m0: mapi(RoverEcuParams.motorsSpeed[0],-1,1,-maxMotorValue,maxMotorValue),
+                m1: mapi(RoverEcuParams.motorsSpeed[1],-1,1,-maxMotorValue,maxMotorValue),
+                m2: mapi(RoverEcuParams.motorsSpeed[2],-1,1,-maxMotorValue,maxMotorValue),
+                m3: mapi(-RoverEcuParams.motorsSpeed[3],-1,1,-maxMotorValue,maxMotorValue),
+                m4: mapi(-RoverEcuParams.motorsSpeed[4],-1,1,-maxMotorValue,maxMotorValue),
+                m5: mapi(-RoverEcuParams.motorsSpeed[5],-1,1,-maxMotorValue,maxMotorValue),
+                
+                s0: mapi(RoverEcuParams.servoAngle[0],-90,90,102,512),
+                s1: mapi(-RoverEcuParams.servoAngle[1],-90,90,102,512),
+                s2: mapi(RoverEcuParams.servoAngle[2],-90,90,102,512),
+                s3: mapi(-RoverEcuParams.servoAngle[3],-90,90,102,512),
+                s4: mapi(RoverEcuParams.servoAngle[4],-90,90,102,512), //turret tilt
+                s5: mapi(-RoverEcuParams.servoAngle[5],-90,90,102,512), //turret pan
+
+            }, function(arg1,arg2,arg3) {
+                //console.log( "success",arg1,arg2,arg3 );
+            },'json')
+            .done(function(data,arg2,arg3) {
+                if (typeof data==='object' && data!==null){
+                    $('#RoverDebugDataText').html(JSON.stringify(data, undefined, 2));
+                    $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',true);
+
+                    if (data && data.camera){
+                      uiCommands.cameraIp = data.camera;
+                    }
+                }
+            })
+            .fail(function(arg1,arg2,arg3) {
+                //console.log( "fail",arg1,arg2,arg3 );
+                $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',false);
+            })
+            .always(function() {
+                uiCommands.jqxhr = null;
+            });
+
+        }
+
+        function requestDataUpdate(){
+          if (uiCommands.getEcuJqxhr){
+            return;
+          }
+
+          uiCommands.getEcuJqxhr = $.get( "/ecu", function(data,arg2,arg3) {
+            if (typeof data==='object' && data!==null){
+                    $('#RoverDebugDataText').html(JSON.stringify(data, undefined, 2));
+                    $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',true);
+
+                    if (data && data.camera){
+                      uiCommands.cameraIp = data.camera;
+                    }
+                }
+            },'json')
+            .fail(function(arg1,arg2,arg3) {
+              $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',false);
+              //console.log("Error getting data",arg1,arg2,arg3);
+            })
+            .always(function() {
+                uiCommands.getEcuJqxhr = null;
+            });
+        }
+
+        function getData(nipple){
+
+            var data = {
+                angle : null,
+                force : null,
+                pressed: !!nipple,
+                x : null,
+                y : null,
+                forcex : null,
+                forcey : null,
+            }
+
+            if (nipple && nipple.direction && nipple.direction.angle) data.angle = nipple.direction.angle;
+            var minForce = 0.3;
+            if (nipple && nipple.force > minForce) data.force = Math.min(1.0 , (nipple.force - minForce) / (1.0 - minForce));
+            if (nipple && nipple.vector) data.x = nipple.vector.x;
+            if (nipple && nipple.vector) data.y = nipple.vector.y;
+
+            if (nipple && nipple.vector && Math.abs(nipple.vector.x) > minForce) data.forcex = Math.sign(nipple.vector.x) * Math.min(1.0 , (Math.abs(nipple.vector.x) - minForce) / (1.0 - minForce));
+            if (nipple && nipple.vector && Math.abs(nipple.vector.y) > minForce) data.forcey = Math.sign(nipple.vector.y) * Math.min(1.0 , (Math.abs(nipple.vector.y) - minForce) / (1.0 - minForce));
+            
+            return data;
+        }
+
+        function formatNippleData(nipple){
+          if (!nipple) return '';
+          return 'pressed: ' + nipple.pressed + 
+          ', angle: ' + nipple.angle + 
+          ', x: ' + (nipple.x + 0).toFixed(2) + 
+          ', y: ' + (nipple.y + 0).toFixed(2) + 
+          ', force: ' + (nipple.force + 0).toFixed(2) + 
+          ', forcex: ' + (nipple.forcex + 0).toFixed(2) + 
+          ', forcey: ' + (nipple.forcey + 0).toFixed(2);
+        }
+
+        function doEcuCalc(){
+            var stop=false;
+            
+            if (uiCommands.lastControllerTime===null){
+                stop = true;
+            }
+
+            var left = getData(uiCommands.lastMoveLeft);
+            var right = getData(uiCommands.lastMoveRight);
+
+            $('#debugLeftNipple').text(formatNippleData(left));
+            $('#debugRightNipple').text(formatNippleData(right));
+
+            //console.log(JSON.stringify({left: left, right: right}));
+
+            if (!stop && !left.pressed && !right.pressed){
+                stop = true;
+            }
+
+            var turretTiltAngle=0;
+            var turretPanAngle=0;
+
+            switch (uiCommands.modeDriving){
+              case MODE_DRIVING_NORMAL:
+              {
+
+                const speed = (right?right.forcey:0) * (uiCommands.modeControl === MODE_CONTROL_EASY ? 0.5 : 1.0);
+                const maxAngle = uiCommands.modeControl === MODE_CONTROL_EASY ? 30 : 45;
+
+                const speedFactorFront = (uiCommands.obstacleMode && right && right.forcey>0?1.5:1);
+                const speedFactorRear = (uiCommands.obstacleMode && right && right.forcey<0?1.5:1);
+
+                const maxTurretAngle = uiCommands.modeControl === MODE_CONTROL_EASY ? 30 : 45;
+
+                var angle;
+                if (left && left.pressed){
+                  angle = Math.abs(left.forcex * maxAngle) * Math.sign(left.forcex);
+                  uiCommands.lastLeftForceX = left.forcex;
+                }
+                else if (uiCommands.lastLeftForceX!==null){
+                  angle = Math.abs(uiCommands.lastLeftForceX * maxAngle) * Math.sign(uiCommands.lastLeftForceX);
+                }
+                else{
+                  angle = 0;
+                }
+
+                if (left && left.pressed){
+                  turretTiltAngle = -Math.abs(left.forcey * maxTurretAngle) * Math.sign(left.forcey);
+                }
+                if (right && right.pressed){
+                  turretPanAngle = Math.abs(right.forcex * maxTurretAngle) * Math.sign(right.forcex);
+                }
+
+                const C = 25; //distance from externa wheels to center wheels in CM
+                const De = 17; //distance from external wheel to center axis in CM
+                const Dc = 22; //distance from center wheel to center axis in CM
+
+                var R = C * Math.tan((angle + 90) / 180 * Math.PI);
+                const isRight=R<0;
+                if (isRight){
+                  R=-R;
+                }
+                const a1 = Math.atan2(R - De,C) / (Math.PI) * 180 - 90;
+                const a2 = Math.atan2(R + De,C) / (Math.PI) * 180 - 90;
+
+                const slowWheelSpeedPercEdgeInternal = (R-De) / R;
+                const slowWheelSpeedPercCenterInternal = (R-Dc) / R;
+                const slowWheelSpeedPercCenterExternal = (R+Dc-De) / R;
+
+                //console.log("ANGLE: ",angle,a1,a2, "Rs: ", R,(R-De),(R-Dc),(R+Dc-De), ", SPEED perc: ", slowWheelSpeedPercEdgeInternal,slowWheelSpeedPercCenterInternal,slowWheelSpeedPercCenterExternal, "right:", right);
+
+                if (!isRight){
+                  RoverEcuParams.servoAngle = [
+                    a1, //front left
+                    -a2, //front right
+                    -a1, //rear left
+                    a2, //rear right
+                  ];
+                  RoverEcuParams.motorsSpeed = [
+                  speedFactorFront*speed*slowWheelSpeedPercEdgeInternal,speed*slowWheelSpeedPercCenterInternal,speedFactorRear*speed*slowWheelSpeedPercEdgeInternal, // left
+                  speedFactorFront*speed,speed*slowWheelSpeedPercCenterExternal,speedFactorRear*speed, // right
+                  ];
+                }
+                else{
+                  RoverEcuParams.servoAngle = [
+                    -a2, //front left
+                    a1, //front right
+                    a2, //rear left
+                    -a1, //rear right
+                  ];
+                  RoverEcuParams.motorsSpeed = [
+                  speedFactorFront*speed,speed*slowWheelSpeedPercCenterExternal,speedFactorRear*speed, // left
+                  speedFactorFront*speed*slowWheelSpeedPercEdgeInternal,speed*slowWheelSpeedPercCenterInternal,speedFactorRear*speed*slowWheelSpeedPercEdgeInternal, // right
+                  ];
+                }
+
+                RoverEcuParams.motorsSpeed[0] = Math.max(Math.min(1.0,RoverEcuParams.motorsSpeed[0]),-1.0);
+                RoverEcuParams.motorsSpeed[1] = Math.max(Math.min(1.0,RoverEcuParams.motorsSpeed[1]),-1.0);
+                RoverEcuParams.motorsSpeed[2] = Math.max(Math.min(1.0,RoverEcuParams.motorsSpeed[2]),-1.0);
+                RoverEcuParams.motorsSpeed[3] = Math.max(Math.min(1.0,RoverEcuParams.motorsSpeed[3]),-1.0);
+                RoverEcuParams.motorsSpeed[4] = Math.max(Math.min(1.0,RoverEcuParams.motorsSpeed[4]),-1.0);
+                RoverEcuParams.motorsSpeed[5] = Math.max(Math.min(1.0,RoverEcuParams.motorsSpeed[5]),-1.0);
+                
+              }
+              break;
+              case MODE_DRIVING_ROTATE:
+              {
+                RoverEcuParams.servoAngle = [1 * 45,1 * 45,-1 * 45,-1 * 45];
+                const speedLeft = (left?left.forcex:0) * (uiCommands.modeControl === MODE_CONTROL_EASY ? 0.5 : 1.0);
+                const speedRight = (left?left.forcex:0) * -1.0 * (uiCommands.modeControl === MODE_CONTROL_EASY ? 0.5 : 1.0);
+
+                RoverEcuParams.motorsSpeed = [
+                    speedLeft,speedLeft,speedLeft,
+                    speedRight,speedRight,speedRight
+                ];
+
+                const maxTurretTiltAngle = uiCommands.modeControl === MODE_CONTROL_EASY ? 30 : 45;
+                const maxTurretPanAngle = uiCommands.modeControl === MODE_CONTROL_EASY ? 90 : 90;
+
+                turretTiltAngle = (right?right.forcey:0) * maxTurretTiltAngle;
+                turretPanAngle = (right?right.forcex:0) * maxTurretPanAngle;
+                
+
+              }
+
+              break;
+              case MODE_DRIVING_TANK:
+              {
+                RoverEcuParams.servoAngle = [0,0,0,0];
+
+                const speedLeft = (left?left.forcey:0) * (uiCommands.modeControl === MODE_CONTROL_EASY ? 0.5 : 1.0);
+                const speedRight = (right?right.forcey:0) * (uiCommands.modeControl === MODE_CONTROL_EASY ? 0.5 : 1.0);
+
+                RoverEcuParams.motorsSpeed = [
+                    speedLeft,speedLeft,speedLeft,
+                    speedRight,speedRight,speedRight
+                ];
+              }
+              break;
+            }
+
+            if (stop){
+                RoverEcuParams.motorsSpeed = [0,0,0,0,0,0];
+            }
+
+            RoverEcuParams.servoAngle[4] = turretTiltAngle;
+            RoverEcuParams.servoAngle[5] = turretPanAngle;
+
+            renderRover();
+            sendData();
+
+        }
+
+        function startEcuCalc(){
+          if (!uiCommands.ecuCalcTimer){
+            uiCommands.ecuCalcTimer = setInterval(doEcuCalc,100);
+          }
+        }
+
+        function stopEcuCalc(){
+          clearInterval(uiCommands.ecuCalcTimer);
+          uiCommands.ecuCalcTimer = null;
+        }
+
+        function updateAccValues(force=false){
+          if (force || Date.now() - uiCommands.lastAccSendTime > 250){
+            uiCommands.lastAccSendTime = Date.now();
+
+            $.post( "/acc",{
+                bottomLed: uiCommands.bottomLed,
+                turretLed: uiCommands.turretLed,
+                turretLaser: uiCommands.turretLaser,
+            }, function(arg1,arg2,arg3) {
+
+            },'json')
+            .done(function(data,arg2,arg3) {
+                if (typeof data==='object' && data!==null){
+                    $('#RoverDebugDataText').html(JSON.stringify(data, undefined, 2));
+                    $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',true);
+                }
+            })
+            .fail(function(arg1,arg2,arg3) {
+                $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',false);
+            })
+
+          }
+        }
+
+        $(function(){
+
+          $('#bottomLedSlider').rangeslider({
+
+            // Feature detection the default is `true`.
+            // Set this to `false` if you want to use
+            // the polyfill also in Browsers which support
+            // the native <input type="range"> element.
+            polyfill: false,
+
+            // Default CSS classes
+            //rangeClass: 'rangeslider',
+            //disabledClass: 'rangeslider--disabled',
+            //horizontalClass: 'rangeslider--horizontal',
+            //verticalClass: 'rangeslider--vertical',
+            //fillClass: 'rangeslider__fill',
+            //handleClass: 'rangeslider__handle',
+
+            // Callback function
+            onInit: function() {},
+
+            // Callback function
+            onSlide: function(position, value) {
+              uiCommands.bottomLed = value;
+              updateAccValues(false);
+            },
+
+            // Callback function
+            onSlideEnd: function(position, value) {
+              uiCommands.bottomLed = value;
+              updateAccValues(true);
+            }
+          });
+
+          
+          $('#ObstacleMode').click(function(){
+            $(this).toggleClass('is-success');
+            uiCommands.obstacleMode = $(this).hasClass('is-success')?1:0;
+          });
+          $('#TurretLaserIcon').click(function(){
+            $(this).toggleClass('is-success');
+            uiCommands.turretLaser = $(this).hasClass('is-success')?1:0;
+            updateAccValues(true);
+          });
+          $('#TurretLedIcon').click(function(){
+            $(this).toggleClass('is-success');
+            uiCommands.turretLed = $(this).hasClass('is-success')?1:0;
+            updateAccValues(true);
+          });
+          $('#TurretCameraIcon').click(function(){
+            $(this).toggleClass('is-success');
+            const enabled = $(this).hasClass('is-success');
+            if (enabled && uiCommands.cameraIp){
+              const cameraUrl = 'http://' + uiCommands.cameraIp + ':81/stream';
+              $('#CameraStream').attr('src',cameraUrl);
+              $('#CameraStream').show();
+            }
+            else if (enabled){
+              alert("Unable to start the camera view");
+              $(this).toggleClass('is-success',false);
+            }
+            else{
+              $('#CameraStream').attr('src','');
+              $('#CameraStream').hide();
+            }
+
+          });
+
+            var joystickL = nipplejs.create({
+                zone: document.getElementById('NippleLeft'),
+                mode: 'static',
+                position: { left: '50%', top: '50%' },
+                color: 'green',
+                size: 300
+            });
+
+            var joystickR = nipplejs.create({
+                zone: document.getElementById('NippleRight'),
+                mode: 'static',
+                position: { left: '50%', top: '50%' },
+                color: 'red',
+                size: 300
+            });
+
+            joystickL.on('move', function (evt,data) {
+                uiCommands.lastControllerTime = Date.now();
+                uiCommands.lastMoveLeft = data;
+                //doEcuCalc();
+            });
+
+            joystickR.on('move', function (evt,data) {
+                uiCommands.lastControllerTime = Date.now();
+                uiCommands.lastMoveRight=data;
+                //doEcuCalc();
+            });
+
+            joystickL.on('start', function (evt) {
+                uiCommands.lastMoveLeft=null;
+                uiCommands.lastControllerTime = Date.now();
+                startEcuCalc();
+            });
+
+            joystickL.on('end', function (evt) {
+                uiCommands.lastMoveLeft=null;
+                uiCommands.lastControllerTime = null;
+                stopEcuCalc();
+                doEcuCalc();
+            });
+
+            joystickR.on('start', function (evt) {
+                uiCommands.lastMoveRight=null;
+                uiCommands.lastControllerTime = Date.now();
+                startEcuCalc();
+            });
+
+            joystickR.on('end', function (evt) {
+                uiCommands.lastMoveRight=null;
+                uiCommands.lastControllerTime = null;
+                stopEcuCalc();
+                doEcuCalc();
+            });
+
+            // setInterval(function(){
+            //     console.log(joystickL,joystickR);
+            // },100);
+
+            function sendCalibrationData(save){
+                const form = $('#CalibrationWindowModal form');
+
+                form.find('#CalibrationStatus').text('SAVING...');
+                const data = {
+                    s0: form.find('input[name=s0]').val() ? form.find('input[name=s0]').val() : 0,
+                    s1: form.find('input[name=s1]').val() ? form.find('input[name=s1]').val() : 0,
+                    s2: form.find('input[name=s2]').val() ? form.find('input[name=s2]').val() : 0,
+                    s3: form.find('input[name=s3]').val() ? form.find('input[name=s3]').val() : 0,
+                    s4: form.find('input[name=s4]').val() ? form.find('input[name=s4]').val() : 0,
+                    s5: form.find('input[name=s5]').val() ? form.find('input[name=s5]').val() : 0,
+                    kp: form.find('input[name=kp]').val() ? form.find('input[name=kp]').val() : 0,
+                    ki: form.find('input[name=ki]').val() ? form.find('input[name=ki]').val() : 0,
+                    kd: form.find('input[name=kd]').val() ? form.find('input[name=kd]').val() : 0,
+                    save: save?1:0,
+                };
+
+                $.post('/servoSetup',data,function(){
+                    form.find('#CalibrationStatus').text(save ? 'SAVED' : 'SENT');
+
+                    RoverEcuParams.motorsSpeed = [0,0,0,0,0,0];
+                    RoverEcuParams.servoAngle = [0,0,0,0,0,0];
+                    sendData();
+
+                }).fail(function(){
+                    form.find('#CalibrationStatus').text('FAIL');
+                });
+            }
+
+            {
+              //WIFI SETTINGS
+              const w = $('#WiFiWindowModal');
+
+              $('#openWifiWindow').click(function(){
+                const btn = $('#otherButton');
+                btn.toggleClass('is-loading',true);
+                $.getJSON('/wifiSetup',function(data){
+
+                  w.find('input[name="staName"]').val(data.staName);
+                  w.find('input[name="staPassword"]').val(data.staPassword);
+                  w.find('input[name="apName"]').val(data.apName);
+                  w.find('input[name="apPassword"]').val(data.apPassword);
+
+                  w.show();
+                }).fail(function(){
+                  alert('Unable to load WiFi settings');
+                  w.show();
+                }).always(function(){
+                  btn.toggleClass('is-loading',false);
+                });
+              });
+              w.find('.modal-close').click(function(){
+                  $(this).closest('.modal').hide();
+              });
+              w.find('button#buttonClose').click(function(){
+                w.hide();
+              });
+              w.find('button#buttonSave').click(function(){
+                const form = w.find('form');
+
+                form.find('#WiFiStatus').text('SAVING...');
+                const data = {
+                  staName: form.find('input[name=staName]').val() ? form.find('input[name=staName]').val() : '',
+                  staPassword: form.find('input[name=staPassword]').val() ? form.find('input[name=staPassword]').val() : '',
+                  apName: form.find('input[name=apName]').val() ? form.find('input[name=apName]').val() : '',
+                  apPassword: form.find('input[name=apPassword]').val() ? form.find('input[name=apPassword]').val() : '',
+                };
+
+                $.post('/wifiSetup',data,function(){
+                  form.find('#WiFiStatus').text('SAVED');
+                }).fail(function(){
+                  form.find('#WiFiStatus').text('FAIL');
+                });
+              });
+
+            }
+
+            {
+              //CALIBRATION WINDOW SETTINGS
+              const w = $('#CalibrationWindowModal');
+              $('#openCalibrationWindow').click(function(){
+                  const btn = $('#otherButton');
+                  btn.toggleClass('is-loading',true);
+                  $.getJSON('/servoSetup',function(data){
+
+                      RoverEcuParams.motorsSpeed = [0,0,0,0,0,0];
+                      RoverEcuParams.servoAngle = [0,0,0,0,0,0];
+                      sendData();
+
+                      w.find('input[name="s0"]').val(data.servos[0]);
+                      w.find('input[name="s1"]').val(data.servos[1]);
+                      w.find('input[name="s2"]').val(data.servos[2]);
+                      w.find('input[name="s3"]').val(data.servos[3]);
+                      w.find('input[name="s4"]').val(data.servos[4]);
+                      w.find('input[name="s5"]').val(data.servos[5]);
+                      w.find('input[name="kp"]').val(data.kp);
+                      w.find('input[name="ki"]').val(data.ki);
+                      w.find('input[name="kd"]').val(data.kd);
+                      
+                      w.show();
+                  }).fail(function(){
+                      alert('Unable to calibrate');
+                      w.show();
+                  }).always(function(){
+                    btn.toggleClass('is-loading',false);
+                  });
+              });
+              w.find('.modal-close').click(function(){
+                  $(this).closest('.modal').hide();
+              });
+
+              w.find('button#buttonClose').click(function(){
+                w.hide();
+              });
+              w.find('button#buttonSave').click(function(){
+                  sendCalibrationData(true);
+              });
+              w.find('button#buttonTest').click(function(){
+                  sendCalibrationData(false);
+              });
+
+              w.find('.incr').click(function(){
+                const i = $(this).closest('.field').find('input[type="number"]');
+                const val = parseInt(i.val());
+                i.val(val + 1);
+                sendCalibrationData(false);
+              });
+              w.find('.decr').click(function(){
+                const i = $(this).closest('.field').find('input[type="number"]');
+                const val = parseInt(i.val());
+                i.val(val - 1);
+                sendCalibrationData(false);
+              });
+
+            }
+
+
+
+
+            $('.mode-control').click(function(){
+              $('.mode-control').toggleClass('is-focused', false);
+              $(this).toggleClass('is-focused',true);
+              switch($(this).attr('id')){
+                case 'ModeEasy':
+                  uiCommands.modeControl = MODE_CONTROL_EASY;
+                  break;
+                case 'ModeAdvanced':
+                  uiCommands.modeControl = MODE_CONTROL_ADVANCED;
+                  break;
+              }
+            });
+
+            $('.mode-driving').click(function(){
+              $('.mode-driving').toggleClass('is-focused', false);
+              $(this).toggleClass('is-focused',true);
+              switch($(this).attr('id')){
+                case 'DrivingNormal':
+                  uiCommands.modeDriving = MODE_DRIVING_NORMAL;
+                  break;
+                case 'DrivingRotate':
+                  uiCommands.modeDriving = MODE_DRIVING_ROTATE;
+                  break;
+                case 'DrivingTank':
+                  uiCommands.modeDriving = MODE_DRIVING_TANK;
+                  break;
+              }
+              doEcuCalc();
+            });
+
+            $('.mode-power').click(function(){
+              $('.mode-power').toggleClass('is-focused', false);
+              $(this).toggleClass('is-focused',true);
+
+              switch($(this).attr('id')){
+                case 'ModeSpeed':
+                  uiCommands.modePower = MODE_POWER_SPEED;
+                  break;
+                case 'ModePwm':
+                  uiCommands.modePower = MODE_POWER_PWM;
+                  break;
+              }
+            });
+
+            $('.play-melody-action').click(function(){
+              const melodyIndex = $(this).data('melody');
+
+              $.post( "/melody",{
+                'melody':melodyIndex==='S'?0:melodyIndex,
+                'stop':melodyIndex==='S'?1:0,
+              }, function(data,arg2,arg3) {
+                  console.log(data);
+              },'json')
+              .fail(function(arg1,arg2,arg3) {
+                //$('#WifiStatusIcon').toggleClass('WifiStatusIconOk',false);
+                console.log("Error getting data",arg1,arg2,arg3);
+              })
+              .always(function() {
+
+              });
+            });
+
+            $('.dropdown').click(function(e){
+              e.preventDefault();
+              $(this).toggleClass('is-active');
+            });
+
+
+            setInterval(function(){
+              requestDataUpdate();
+            },1000);
+
+        });
+
+
+
+
+
+
+
+    </script>
+
+</body>
+
+</html>

@@ -7,6 +7,10 @@
 node_modules/
 dist/
 
+data/
+
+.pio/
+
 # Compiled Java class files
 *.class
 
@@ -47,3 +51,7 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
+
+
+
+src/config.h

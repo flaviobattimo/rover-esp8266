@@ -1,0 +1,12 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ESP8266 - Upload sketch data directory",
+            "type": "shell",
+            "command": "java -jar E:\\Applicazioni\\ESP8266FS\\tool\\esp8266fs.jar"
+        }
+    ]
+}
