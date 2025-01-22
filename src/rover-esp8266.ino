@@ -23,12 +23,8 @@
 #include <ESP8266mDNS.h>
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
-#include <WiFiClientSecureAxTLS.h>
-#include <WiFiClientSecureBearSSL.h>
 #include <WiFiServer.h>
 #include <WiFiServerSecure.h>
-#include <WiFiServerSecureAxTLS.h>
-#include <WiFiServerSecureBearSSL.h>
 #include <WiFiUdp.h>
 
 #include <ESP8266WebServer.h>
@@ -193,6 +189,54 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   return false;                                         // If the file doesn't exist, return false
 }
 
+bool checkApiKey(){
+
+    if (server.arg("password") == String(UI_API_KEY)){
+        return true;
+    }
+
+    server.send(401);
+    return false;
+
+}
+
+void handleInfoCommand(){
+
+  String response = "<html><body>";
+  response += "<h1>ESP8266</h1>";
+
+  // Flash Memory
+  response += "<h2>Flash Memory</h2>";
+  response += "Chip Size: " + String(ESP.getFlashChipSize() / 1024) + " KB<br>";
+  response += "Flash Mode: " + String(ESP.getFlashChipMode()) + "<br>";
+  response += "Flash speed: " + String(ESP.getFlashChipSpeed()) + "<br>";
+  response += "Sketch Size: " + String(ESP.getSketchSize() / 1024) + " KB<br>";
+  response += "Free Sketch Space: " + String(ESP.getFreeSketchSpace() / 1024) + " KB<br>";
+
+  // File System (LittleFS)
+  FSInfo fs_info;
+  if (LittleFS.info(fs_info)) {
+    response += "<h2>File System (LittleFS)</h2>";
+    response += "Total Bytes: " + String(fs_info.totalBytes / 1024) + " KB<br>";
+    response += "Used Bytes: " + String(fs_info.usedBytes / 1024) + " KB<br>";
+    response += "Free Bytes: " + String((fs_info.totalBytes - fs_info.usedBytes) / 1024) + " KB<br>";
+  } else {
+    response += "<h2>File System</h2>";
+    response += "LittleFS non inizializzato.<br>";
+  }
+
+  //
+  response += "<h2>Board</h2>";
+  response += "Chip ID: " + String(ESP.getChipId()) + "<br>";
+  response += "CPU Frequency: " + String(ESP.getCpuFreqMHz()) + " MHz<br>";
+  response += "SDK Version: " + String(ESP.getSdkVersion()) + "<br>";
+  response += "Free Heap: " + String(ESP.getFreeHeap() / 1024) + " KB<br>";
+
+  response += "</body></html>";
+
+  server.send(200, "text/html", response);
+}
+
 void playNextTone(){
 
     if (currentMelodyNextTime > 0 && millis() >= currentMelodyNextTime){
@@ -264,6 +308,11 @@ void playNextTone(){
 }
 
 void handleMelodyCommand() {
+
+    if (!checkApiKey()){
+        return;
+    }
+
     int res = 0;
     if (server.method() == HTTP_POST){
         int melodyIndex = atoi(server.arg("melody").c_str());
@@ -300,6 +349,10 @@ void handleMelodyCommand() {
 }
 
 void handleAccCommand() {
+    if (!checkApiKey()){
+        return;
+    }
+
     if (server.method() == HTTP_POST){
         bottomLed = atoi(server.arg("bottomLed").c_str());
         turretLed = atoi(server.arg("turretLed").c_str());
@@ -334,6 +387,10 @@ void handleAccCommand() {
 }
 
 void handleEcuCommand() {
+
+    if (!checkApiKey()){
+        return;
+    }
 
     if (server.method() == HTTP_POST)
     {
@@ -421,6 +478,10 @@ void handleEcuCommand() {
 
 void handleServoSetupCommand()
 {
+    if (!checkApiKey()){
+        return;
+    }
+
     if (server.method() == HTTP_POST)
     {
         settings.servosPwmCorrection[0] = atoi(server.arg("s0").c_str());
@@ -468,7 +529,10 @@ void handleServoSetupCommand()
 }
 
 void handleWifiSetupCommand(){
-
+    if (!checkApiKey()){
+        return;
+    }
+    
     bool error = false;
 
     if (server.method() == HTTP_POST){
@@ -597,6 +661,8 @@ void setup()
     strcpy(currentWifiPassword,"");
     strcpy(ecuStats.camIp,"");
 
+    WiFi.hostname("Rover-ESP8266");
+
     if(!loadSettings()){
         //Serial.println("Restoring settings to default");
     }
@@ -660,6 +726,7 @@ void setup()
     server.on("/servoSetup", handleServoSetupCommand);
     server.on("/acc", handleAccCommand);
     server.on("/melody", handleMelodyCommand);
+    server.on("/info", handleInfoCommand);
 
     server.onNotFound([]() {                              // If the client requests any URI
         if (!handleFileRead(server.uri()))                  // send it if it exists
@@ -772,7 +839,7 @@ void loop()
 
     }
 
-    //for the firsr 30 seconds sent settings to the ECU every second
+    //for the first 30 seconds send settings to the ECU every second
     uint32_t time = millis();
     if (time < 30000 && time > nextSendSettingsTime){
         sendSettingsToEcu();

@@ -6,10 +6,18 @@ import shutil
 import glob
 
 # HELPER TO GZIP A FILE
-def gzip_file( src_path, dst_path ):
-    with open( src_path, 'rb' ) as src, gzip.open( dst_path, 'wb' ) as dst:
-        for chunk in iter( lambda: src.read(4096), b"" ):
-            dst.write( chunk )
+def gzip_file(src_path, dst_path):
+    print(f"Gzipping {src_path} to {dst_path}")
+    try:
+        with open(src_path, 'rb') as src, gzip.open(dst_path, 'wb') as dst:
+            for chunk in iter(lambda: src.read(4096), b""):
+                dst.write(chunk)
+    except FileNotFoundError:
+        print(f"File not found: {src_path}")
+    except PermissionError:
+        print(f"Permission denied for: {src_path} or {dst_path}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def prepare_www_files(source, target, env):
     #WARNING -  this script will DELETE your 'data' dir and recreate an empty one to copy/gzip files from 'data_src'
@@ -25,8 +33,12 @@ def prepare_www_files(source, target, env):
     
     print('[COPY/GZIP DATA FILES]')
 
-    data_dir = env.get('PROJECTDATA_DIR')
+    data_dir = os.path.join(env.get('PROJECT_DIR'), 'data')
     data_src_dir = os.path.join(env.get('PROJECT_DIR'), 'data_src')
+
+    print(f"Data dir: {data_dir}")
+    print(f"Data src dir: {data_src_dir}")
+    
 
     if(os.path.exists(data_dir) and not os.path.exists(data_src_dir) ):
         print('  "data" dir exists, "data_src" not found.')

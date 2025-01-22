@@ -2,3 +2,4 @@
 #define WIFI_DEFAULT_STA_PASSWORD "you local network password"
 #define SOFT_AP_NAME "Rover"
 #define SOFT_AP_PASSWORD "R0v3rcmd"
+#define UI_API_KEY SOFT_AP_PASSWORD

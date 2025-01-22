@@ -126,10 +126,27 @@
       z-index: unset !important;
     }
 
+    .toast {
+            position: fixed;
+            top: 20px;
+            right: 30%;
+            z-index: 9999;
+            display: none; /* Inizialmente nascosto */
+        }
+
     </style>
 </head>
 
 <body>
+      <!-- Toast Message -->
+      <div id="toast" class="toast notification is-success">
+        <button class="delete"></button>
+        <span class="icon is-small">
+            <i class="fas fa-check-circle"></i>
+        </span>
+        <span id="toast-text">Success! Your action was successful.</span>
+    </div>
+
     <div id="CameraView">
       <img id="CameraStream" src="" class="rotate90">
     </div>
@@ -479,28 +496,28 @@
 
   <div class="slider-div">
     <p>
-      <button id="ObstacleMode" class="button">
+      <button id="ObstacleMode" class="button" title="Obstacle mode">
         <span class="icon">
           <img  src="ruler-solid.svg">
         </span>
       </button>
     </p>
     <p>
-      <button id="TurretCameraIcon" class="button">
+      <button id="TurretCameraIcon" class="button" title="Camera stream">
         <span class="icon">
           <img  src="camera.svg">
         </span>
       </button>
     </p>
     <p>
-      <button id="TurretLaserIcon" class="button">
+      <button id="TurretLaserIcon" class="button" title="Laser">
         <span class="icon">
           <img  src="laser.svg">
         </span>
       </button>
     </p>
     <p>
-      <button id="TurretLedIcon" class="button">
+      <button id="TurretLedIcon" class="button" title="Turret led">
         <span class="icon">
           <img src="circle.svg">
         </span>
@@ -510,7 +527,7 @@
       <img id="LightIcon" src="sun.svg">
     </p>
     <p>
-      <input id="bottomLedSlider" type="range" min="0" max="4095" step="5" value="0" data-orientation="vertical" style="height: 100%;">
+      <input title="Underbody leds" id="bottomLedSlider" type="range" min="0" max="4095" step="5" value="0" data-orientation="vertical" style="height: 100%;">
     </p>
   </div>
 
@@ -526,6 +543,8 @@
 
       const MODE_POWER_SPEED = 1;
       const MODE_POWER_PWM = 2;
+
+      const API_PASSWORD=localStorage.getItem('password') ?? '';
 
         var uiCommands={
             lastControllerTime: null,
@@ -591,42 +610,48 @@
 
             const maxMotorValue = uiCommands.modePower == MODE_POWER_SPEED ? 1500 : 4095;
 
-            uiCommands.jqxhr = $.post( "/ecu",{
-                mode: uiCommands.modePower,
-                m0: mapi(RoverEcuParams.motorsSpeed[0],-1,1,-maxMotorValue,maxMotorValue),
-                m1: mapi(RoverEcuParams.motorsSpeed[1],-1,1,-maxMotorValue,maxMotorValue),
-                m2: mapi(RoverEcuParams.motorsSpeed[2],-1,1,-maxMotorValue,maxMotorValue),
-                m3: mapi(-RoverEcuParams.motorsSpeed[3],-1,1,-maxMotorValue,maxMotorValue),
-                m4: mapi(-RoverEcuParams.motorsSpeed[4],-1,1,-maxMotorValue,maxMotorValue),
-                m5: mapi(-RoverEcuParams.motorsSpeed[5],-1,1,-maxMotorValue,maxMotorValue),
-                
-                s0: mapi(RoverEcuParams.servoAngle[0],-90,90,102,512),
-                s1: mapi(-RoverEcuParams.servoAngle[1],-90,90,102,512),
-                s2: mapi(RoverEcuParams.servoAngle[2],-90,90,102,512),
-                s3: mapi(-RoverEcuParams.servoAngle[3],-90,90,102,512),
-                s4: mapi(RoverEcuParams.servoAngle[4],-90,90,102,512), //turret tilt
-                s5: mapi(-RoverEcuParams.servoAngle[5],-90,90,102,512), //turret pan
+          uiCommands.jqxhr = $.ajax({
+            method: 'POST',
+            url: '/ecu' + '?password=' + encodeURIComponent(API_PASSWORD),
+            data: {
+              mode: uiCommands.modePower,
+              m0: mapi(RoverEcuParams.motorsSpeed[0], -1, 1, -maxMotorValue, maxMotorValue),
+              m1: mapi(RoverEcuParams.motorsSpeed[1], -1, 1, -maxMotorValue, maxMotorValue),
+              m2: mapi(RoverEcuParams.motorsSpeed[2], -1, 1, -maxMotorValue, maxMotorValue),
+              m3: mapi(-RoverEcuParams.motorsSpeed[3], -1, 1, -maxMotorValue, maxMotorValue),
+              m4: mapi(-RoverEcuParams.motorsSpeed[4], -1, 1, -maxMotorValue, maxMotorValue),
+              m5: mapi(-RoverEcuParams.motorsSpeed[5], -1, 1, -maxMotorValue, maxMotorValue),
 
-            }, function(arg1,arg2,arg3) {
-                //console.log( "success",arg1,arg2,arg3 );
-            },'json')
-            .done(function(data,arg2,arg3) {
-                if (typeof data==='object' && data!==null){
-                    $('#RoverDebugDataText').html(JSON.stringify(data, undefined, 2));
-                    $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',true);
+              s0: mapi(RoverEcuParams.servoAngle[0], -90, 90, 102, 512),
+              s1: mapi(-RoverEcuParams.servoAngle[1], -90, 90, 102, 512),
+              s2: mapi(RoverEcuParams.servoAngle[2], -90, 90, 102, 512),
+              s3: mapi(-RoverEcuParams.servoAngle[3], -90, 90, 102, 512),
+              s4: mapi(RoverEcuParams.servoAngle[4], -90, 90, 102, 512), //turret tilt
+              s5: mapi(-RoverEcuParams.servoAngle[5], -90, 90, 102, 512), //turret pan
 
-                    if (data && data.camera){
-                      uiCommands.cameraIp = data.camera;
-                    }
+            },
+            success: function (data, arg2, arg3) {
+              if (typeof data === 'object' && data !== null) {
+                $('#RoverDebugDataText').html(JSON.stringify(data, undefined, 2));
+                $('#WifiStatusIcon').toggleClass('WifiStatusIconOk', true);
+
+                if (data && data.camera) {
+                  uiCommands.cameraIp = data.camera;
                 }
-            })
-            .fail(function(arg1,arg2,arg3) {
-                //console.log( "fail",arg1,arg2,arg3 );
-                $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',false);
-            })
-            .always(function() {
-                uiCommands.jqxhr = null;
-            });
+              }
+            },
+            error: function (arg1, arg2, arg3) {
+              //console.log( "fail",arg1,arg2,arg3 );
+              $('#WifiStatusIcon').toggleClass('WifiStatusIconOk', false);
+            },
+            complete: function () {
+              uiCommands.jqxhr = null;
+            },
+            headers: {
+              'X-Api-Key': localStorage.getItem('password'),
+            },
+
+          });
 
         }
 
@@ -635,28 +660,36 @@
             return;
           }
 
-          uiCommands.getEcuJqxhr = $.get( "/ecu", function(data,arg2,arg3) {
-            if (typeof data==='object' && data!==null){
-                    $('#RoverDebugDataText').html(JSON.stringify(data, undefined, 2));
-                    $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',true);
+          uiCommands.getEcuJqxhr = $.ajax({
+            method: 'GET',
+            url: '/ecu' + '?password=' + encodeURIComponent(API_PASSWORD),
+            dataType: 'json',
+            success: function (data, arg2, arg3) {
+              if (typeof data === 'object' && data !== null) {
+                $('#RoverDebugDataText').html(JSON.stringify(data, undefined, 2));
+                $('#WifiStatusIcon').toggleClass('WifiStatusIconOk', true);
 
-                    if (data && data.camera){
-                      uiCommands.cameraIp = data.camera;
-                    }
+                if (data && data.camera) {
+                  uiCommands.cameraIp = data.camera;
                 }
-            },'json')
-            .fail(function(arg1,arg2,arg3) {
-              $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',false);
-              //console.log("Error getting data",arg1,arg2,arg3);
-            })
-            .always(function() {
-                uiCommands.getEcuJqxhr = null;
-            });
+              }
+            },
+            error: function (req, arg2, arg3) {
+              $('#WifiStatusIcon').toggleClass('WifiStatusIconOk', false);
+              if (req.status==401){
+                window.location.href = "login.html"; // Redirect to index.html
+              }
+            },
+            complete: function () { uiCommands.getEcuJqxhr = null; },
+            headers: {
+              'X-Api-Key': localStorage.getItem('password'),
+            }
+          });
         }
 
         function getData(nipple){
 
-            var data = {
+            let data = {
                 angle : null,
                 force : null,
                 pressed: !!nipple,
@@ -667,7 +700,7 @@
             }
 
             if (nipple && nipple.direction && nipple.direction.angle) data.angle = nipple.direction.angle;
-            var minForce = 0.3;
+            const minForce = 0.3;
             if (nipple && nipple.force > minForce) data.force = Math.min(1.0 , (nipple.force - minForce) / (1.0 - minForce));
             if (nipple && nipple.vector) data.x = nipple.vector.x;
             if (nipple && nipple.vector) data.y = nipple.vector.y;
@@ -853,29 +886,62 @@
           uiCommands.ecuCalcTimer = null;
         }
 
-        function updateAccValues(force=false){
-          if (force || Date.now() - uiCommands.lastAccSendTime > 250){
+        function isIPAddress(hostname) {
+            const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+            return ipv4Regex.test(hostname);
+        }
+
+        function updateAccValues(force = false) {
+          if (force || Date.now() - uiCommands.lastAccSendTime > 250) {
             uiCommands.lastAccSendTime = Date.now();
 
-            $.post( "/acc",{
+            $.ajax({
+              dataType: 'json',
+              method:'POST',
+              url: '/acc' + '?password=' + encodeURIComponent(API_PASSWORD),
+              data: {
                 bottomLed: uiCommands.bottomLed,
                 turretLed: uiCommands.turretLed,
                 turretLaser: uiCommands.turretLaser,
-            }, function(arg1,arg2,arg3) {
-
-            },'json')
-            .done(function(data,arg2,arg3) {
-                if (typeof data==='object' && data!==null){
-                    $('#RoverDebugDataText').html(JSON.stringify(data, undefined, 2));
-                    $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',true);
+              },
+              success: function (data, arg2, arg3) {
+                if (typeof data === 'object' && data !== null) {
+                  $('#RoverDebugDataText').html(JSON.stringify(data, undefined, 2));
+                  $('#WifiStatusIcon').toggleClass('WifiStatusIconOk', true);
                 }
-            })
-            .fail(function(arg1,arg2,arg3) {
-                $('#WifiStatusIcon').toggleClass('WifiStatusIconOk',false);
-            })
+              },
+              error: function (arg1, arg2, arg3) {
+                $('#WifiStatusIcon').toggleClass('WifiStatusIconOk', false);
+              },
+              headers: {
+                'X-Api-Key': localStorage.getItem('password'),
+              },
 
+            });
           }
         }
+
+        let toastTimeout=null;
+        // Funzione per mostrare il Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            toastText.textContent = message; // Imposta il testo del Toast
+            toast.style.display = 'block'; // Mostra il Toast
+
+            if (toastTimeout){
+              clearInterval(toastTimeout);
+              toastTimeout=null;
+            }
+
+            // Nascondi il Toast
+            toastTimeout=setTimeout(function() {
+                toast.style.display = 'none';
+            }, 1000);
+        }
+
+
+
 
         $(function(){
 
@@ -902,12 +968,16 @@
             onSlide: function(position, value) {
               uiCommands.bottomLed = value;
               updateAccValues(false);
+
+              showToast('Underbody leds: ' + value);
             },
 
             // Callback function
             onSlideEnd: function(position, value) {
               uiCommands.bottomLed = value;
               updateAccValues(true);
+
+              showToast('Underbody leds: ' + value);
             }
           });
 
@@ -915,22 +985,35 @@
           $('#ObstacleMode').click(function(){
             $(this).toggleClass('is-success');
             uiCommands.obstacleMode = $(this).hasClass('is-success')?1:0;
+
+            showToast($(this).attr('title') + ($(this).hasClass('is-success')?' on':' off'));
           });
           $('#TurretLaserIcon').click(function(){
             $(this).toggleClass('is-success');
             uiCommands.turretLaser = $(this).hasClass('is-success')?1:0;
             updateAccValues(true);
+            showToast($(this).attr('title') + ($(this).hasClass('is-success')?' on':' off'));
           });
           $('#TurretLedIcon').click(function(){
             $(this).toggleClass('is-success');
             uiCommands.turretLed = $(this).hasClass('is-success')?1:0;
             updateAccValues(true);
+            showToast($(this).attr('title') + ($(this).hasClass('is-success')?' on':' off'));
           });
           $('#TurretCameraIcon').click(function(){
             $(this).toggleClass('is-success');
             const enabled = $(this).hasClass('is-success');
-            if (enabled && uiCommands.cameraIp){
-              const cameraUrl = 'http://' + uiCommands.cameraIp + ':81/stream';
+            if (enabled && !isIPAddress(window.location.hostname)){
+              //can be used to stream the camera behind NAT (camera url port is rover port + 1)
+              let currentHostname = window.location.hostname;
+              let currentPort = window.location.port || (window.location.protocol === "https:" ? 443 : 80); // Porta di default
+              currentPort = parseInt(currentPort) + 1;
+              let cameraUrl = window.location.protocol + "//" + currentHostname + ":" + currentPort + '/stream' + '?password=' + encodeURIComponent(API_PASSWORD);
+              $('#CameraStream').attr('src',cameraUrl);
+              $('#CameraStream').show();
+            }
+            else if (enabled && uiCommands.cameraIp){
+              const cameraUrl = 'http://' + uiCommands.cameraIp + ':81/stream'+ localStorage.getItem('password');
               $('#CameraStream').attr('src',cameraUrl);
               $('#CameraStream').show();
             }
@@ -942,6 +1025,8 @@
               $('#CameraStream').attr('src','');
               $('#CameraStream').hide();
             }
+
+            showToast($(this).attr('title') + ($(this).hasClass('is-success')?' on':' off'));
 
           });
 
@@ -1020,16 +1105,25 @@
                     save: save?1:0,
                 };
 
-                $.post('/servoSetup',data,function(){
-                    form.find('#CalibrationStatus').text(save ? 'SAVED' : 'SENT');
+              $.ajax({
+                headers: {
+                  'X-Api-Key': localStorage.getItem('password'),
+                },
+                url: '/servoSetup' + '?password=' + encodeURIComponent(API_PASSWORD),
+                dataType: 'json',
+                data: data,
+                success: function () {
+                  form.find('#CalibrationStatus').text(save ? 'SAVED' : 'SENT');
 
-                    RoverEcuParams.motorsSpeed = [0,0,0,0,0,0];
-                    RoverEcuParams.servoAngle = [0,0,0,0,0,0];
-                    sendData();
+                  RoverEcuParams.motorsSpeed = [0, 0, 0, 0, 0, 0];
+                  RoverEcuParams.servoAngle = [0, 0, 0, 0, 0, 0];
+                  sendData();
 
-                }).fail(function(){
-                    form.find('#CalibrationStatus').text('FAIL');
-                });
+                },
+                error: function () {
+                  form.find('#CalibrationStatus').text('FAIL');
+                },
+              });
             }
 
             {
@@ -1039,19 +1133,29 @@
               $('#openWifiWindow').click(function(){
                 const btn = $('#otherButton');
                 btn.toggleClass('is-loading',true);
-                $.getJSON('/wifiSetup',function(data){
+                $.ajax({
+                  headers: {
+                    'X-Api-Key': localStorage.getItem('password'),
+                  },
+                  method:'GET',
+                  url: '/wifiSetup' + '?password=' + encodeURIComponent(API_PASSWORD),
+                  dataType: 'json',
+                  success: function (data) {
 
-                  w.find('input[name="staName"]').val(data.staName);
-                  w.find('input[name="staPassword"]').val(data.staPassword);
-                  w.find('input[name="apName"]').val(data.apName);
-                  w.find('input[name="apPassword"]').val(data.apPassword);
+                    w.find('input[name="staName"]').val(data.staName);
+                    w.find('input[name="staPassword"]').val(data.staPassword);
+                    w.find('input[name="apName"]').val(data.apName);
+                    w.find('input[name="apPassword"]').val(data.apPassword);
 
-                  w.show();
-                }).fail(function(){
-                  alert('Unable to load WiFi settings');
-                  w.show();
-                }).always(function(){
-                  btn.toggleClass('is-loading',false);
+                    w.show();
+                  },
+                  error: function () {
+                    alert('Unable to load WiFi settings');
+                    w.show();
+                  },
+                  complete: function () {
+                    btn.toggleClass('is-loading', false);
+                  },
                 });
               });
               w.find('.modal-close').click(function(){
@@ -1071,10 +1175,20 @@
                   apPassword: form.find('input[name=apPassword]').val() ? form.find('input[name=apPassword]').val() : '',
                 };
 
-                $.post('/wifiSetup',data,function(){
-                  form.find('#WiFiStatus').text('SAVED');
-                }).fail(function(){
-                  form.find('#WiFiStatus').text('FAIL');
+                $.ajax({
+                  headers: {
+                    'X-Api-Key': localStorage.getItem('password'),
+                  },
+                  method: 'POST',
+                  url: '/wifiSetup' + '?password=' + encodeURIComponent(API_PASSWORD),
+                  dataType: 'json',
+                  data: data,
+                  success: function () {
+                    form.find('#WiFiStatus').text('SAVED');
+                  },
+                  error: function () {
+                    form.find('#WiFiStatus').text('FAIL');
+                  }
                 });
               });
 
@@ -1084,31 +1198,41 @@
               //CALIBRATION WINDOW SETTINGS
               const w = $('#CalibrationWindowModal');
               $('#openCalibrationWindow').click(function(){
-                  const btn = $('#otherButton');
-                  btn.toggleClass('is-loading',true);
-                  $.getJSON('/servoSetup',function(data){
+                const btn = $('#otherButton');
+                btn.toggleClass('is-loading',true);
+                $.ajax({
+                  headers: {
+                    'X-Api-Key': localStorage.getItem('password'),
+                  },
+                  method: 'GET',
+                  url: '/servoSetup' + '?password=' + encodeURIComponent(API_PASSWORD),
+                  dataType: 'json',
+                  success: function (data) {
 
-                      RoverEcuParams.motorsSpeed = [0,0,0,0,0,0];
-                      RoverEcuParams.servoAngle = [0,0,0,0,0,0];
-                      sendData();
+                    RoverEcuParams.motorsSpeed = [0, 0, 0, 0, 0, 0];
+                    RoverEcuParams.servoAngle = [0, 0, 0, 0, 0, 0];
+                    sendData();
 
-                      w.find('input[name="s0"]').val(data.servos[0]);
-                      w.find('input[name="s1"]').val(data.servos[1]);
-                      w.find('input[name="s2"]').val(data.servos[2]);
-                      w.find('input[name="s3"]').val(data.servos[3]);
-                      w.find('input[name="s4"]').val(data.servos[4]);
-                      w.find('input[name="s5"]').val(data.servos[5]);
-                      w.find('input[name="kp"]').val(data.kp);
-                      w.find('input[name="ki"]').val(data.ki);
-                      w.find('input[name="kd"]').val(data.kd);
-                      
-                      w.show();
-                  }).fail(function(){
-                      alert('Unable to calibrate');
-                      w.show();
-                  }).always(function(){
-                    btn.toggleClass('is-loading',false);
-                  });
+                    w.find('input[name="s0"]').val(data.servos[0]);
+                    w.find('input[name="s1"]').val(data.servos[1]);
+                    w.find('input[name="s2"]').val(data.servos[2]);
+                    w.find('input[name="s3"]').val(data.servos[3]);
+                    w.find('input[name="s4"]').val(data.servos[4]);
+                    w.find('input[name="s5"]').val(data.servos[5]);
+                    w.find('input[name="kp"]').val(data.kp);
+                    w.find('input[name="ki"]').val(data.ki);
+                    w.find('input[name="kd"]').val(data.kd);
+
+                    w.show();
+                  },
+                  error: function () {
+                    alert('Unable to calibrate');
+                    w.show();
+                  },
+                  complete: function () {
+                    btn.toggleClass('is-loading', false);
+                  },
+                });
               });
               w.find('.modal-close').click(function(){
                   $(this).closest('.modal').hide();
@@ -1189,19 +1313,26 @@
             $('.play-melody-action').click(function(){
               const melodyIndex = $(this).data('melody');
 
-              $.post( "/melody",{
-                'melody':melodyIndex==='S'?0:melodyIndex,
-                'stop':melodyIndex==='S'?1:0,
-              }, function(data,arg2,arg3) {
+              $.ajax({
+                headers: {
+                  'X-Api-Key': localStorage.getItem('password'),
+                },
+                method: 'POST',
+                url: '/melody' + '?password=' + encodeURIComponent(API_PASSWORD),
+                dataType: 'json',
+                data: {
+                  'melody': melodyIndex === 'S' ? 0 : melodyIndex,
+                  'stop': melodyIndex === 'S' ? 1 : 0,
+                },
+                success: function (data, arg2, arg3) {
                   console.log(data);
-              },'json')
-              .fail(function(arg1,arg2,arg3) {
-                //$('#WifiStatusIcon').toggleClass('WifiStatusIconOk',false);
-                console.log("Error getting data",arg1,arg2,arg3);
-              })
-              .always(function() {
-
-              });
+                },
+                error: function (arg1, arg2, arg3) {
+                  //$('#WifiStatusIcon').toggleClass('WifiStatusIconOk',false);
+                  console.log("Error getting data", arg1, arg2, arg3);
+                },
+              }); 
+              
             });
 
             $('.dropdown').click(function(e){
