@@ -1013,7 +1013,7 @@
               $('#CameraStream').show();
             }
             else if (enabled && uiCommands.cameraIp){
-              const cameraUrl = 'http://' + uiCommands.cameraIp + ':81/stream'+ localStorage.getItem('password');
+              const cameraUrl = 'http://' + uiCommands.cameraIp + ':81/stream' + '?password=' + encodeURIComponent(API_PASSWORD);
               $('#CameraStream').attr('src',cameraUrl);
               $('#CameraStream').show();
             }
