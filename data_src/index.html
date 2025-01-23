@@ -1112,6 +1112,7 @@
                 url: '/servoSetup' + '?password=' + encodeURIComponent(API_PASSWORD),
                 dataType: 'json',
                 data: data,
+                method:'POST',
                 success: function () {
                   form.find('#CalibrationStatus').text(save ? 'SAVED' : 'SENT');
 
